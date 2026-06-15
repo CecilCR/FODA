@@ -62,6 +62,7 @@ text
 │             │    │  (drag&drop)   │    │             │    │  (FO/DO/FA/DA)│   │            │
 └─────────────┘    └────────────────┘    └─────────────┘    └──────────────┘    └────────────┘
     20%                  40%                   60%                 80%               100%
+
 Fase 1: El caso (20%)
 Lectura grupal del contexto, datos clave y alternativas estratégicas.
 
