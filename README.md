@@ -53,7 +53,7 @@ B — Consolidación: Mantener 5 locales, profesionalizar procesos
 C — Crecimiento selectivo: Inversión parcial con criterios estrictos
 
 🧩 Flujo de la actividad (5 fases)
-text
+
 ┌─────────────┐    ┌────────────────┐    ┌─────────────┐    ┌──────────────┐    ┌────────────┐
 │  FASE 1     │    │    FASE 2      │    │   FASE 3    │    │    FASE 4    │    │   FASE 5   │
 │             │───▶│                │───▶│             │───▶│              │───▶│            │
