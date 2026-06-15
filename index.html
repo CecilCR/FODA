@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FODA · Café Andino</title>
+<meta property="og:title" content="Análisis FODA — Café Andino">
+<meta property="og:description" content="Herramienta interactiva para construir el diagnóstico estratégico del caso Café Andino">
+<meta property="og:type" content="sitio-web">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --cafe-oscuro:   #3B2314;
+  --cafe-medio:    #7C4A22;
+  --cafe-claro:    #C4854A;
+  --crema:         #F5EDE0;
+  --crema-oscura:  #EAD9C5;
+  --verde-andino:  #2D6A4F;
+  --verde-claro:   #52B788;
+  --rojo-andino:   #C1440E;
+  --rojo-claro:    #E07A5F;
+  --dorado:        #D4A017;
+  --dorado-claro:  #F2CC6B;
+  --gris-texto:    #2C1F14;
+  --gris-suave:    #7A6859;
+  --blanco:        #FDFAF7;
+
+  /* cuadrantes FODA */
+  --q-fortaleza:   #2D6A4F;
+  --q-debilidad:   #C1440E;
+  --q-oportunidad: #1A5276;
+  --q-amenaza:     #7C4A22;
+
+  /* fondo cuadrante suave */
+  --qf-bg: #E8F5EE;
+  --qd-bg: #FAEAE4;
+  --qo-bg: #E8EDF8;
+  --qa-bg: #F5EDE0;
+
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(59,35,20,0.10);
+  --shadow-hover: 0 6px 20px rgba(59,35,20,0.18);
+  --transition: 0.25s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--crema);
+  color: var(--gris-texto);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────────── */
+.site-header {
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  padding: 28px 40px 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+}
+.header-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--cafe-claro);
+  margin-bottom: 6px;
+}
+.header-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 700;
+  color: var(--crema);
+  line-height: 1.15;
+}
+.header-subtitle {
+  font-size: 14px;
+  color: rgba(245,237,224,0.65);
+  margin-top: 4px;
+}
+.header-badge {
+  margin-left: auto;
+  background: var(--verde-andino);
+  color: var(--crema);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── STEPPER NAV ─────────────────────────────────────────────── */
+.stepper {
+  background: var(--cafe-medio);
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  gap: 0;
+  overflow-x: auto;
+}
+.step-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  color: rgba(245,237,224,0.55);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+  position: relative;
+}
+.step-btn:hover { color: var(--crema); }
+.step-btn.active {
+  color: var(--dorado-claro);
+  border-bottom-color: var(--dorado-claro);
+  font-weight: 600;
+}
+.step-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(245,237,224,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.step-btn.active .step-num { background: var(--dorado); color: var(--cafe-oscuro); }
+.step-btn.done .step-num { background: var(--verde-andino); color: white; }
+.step-btn.done { color: var(--verde-claro); }
+.step-divider { color: rgba(245,237,224,0.25); font-size: 18px; padding: 0 4px; flex-shrink: 0; }
+
+/* ─── MAIN CONTENT ────────────────────────────────────────────── */
+.main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; }
+
+/* ─── FASE PANELS ─────────────────────────────────────────────── */
+.fase { display: none; animation: fadeSlide .4s ease; }
+.fase.active { display: block; }
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── FASE 0: CASO ────────────────────────────────────────────── */
+.caso-intro {
+  background: white;
+  border: 1px solid var(--crema-oscura);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.caso-intro-header {
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  padding: 22px 28px;
+  display: flex; align-items: center; gap: 14px;
+}
+.caso-icon { font-size: 28px; }
+.caso-intro-header h2 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 20px; font-weight: 600;
+}
+.caso-intro-header p { font-size: 13px; color: rgba(245,237,224,0.7); margin-top: 2px; }
+.caso-body { padding: 28px; }
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.data-card {
+  background: var(--crema);
+  border: 1px solid var(--crema-oscura);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.data-card .dc-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gris-suave);
+  margin-bottom: 4px;
+}
+.data-card .dc-value {
+  font-family: 'Source Serif 4', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cafe-medio);
+}
+
+.dilema-box {
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin: 20px 0;
+  font-family: 'Source Serif 4', serif;
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.7;
+  border-left: 4px solid var(--dorado);
+}
+.dilema-box .voces {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.voz {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: 13px;
+  background: rgba(245,237,224,0.08);
+  border-radius: 6px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--cafe-claro);
+}
+.voz strong { color: var(--dorado-claro); }
+
+.caso-section-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cafe-oscuro);
+  margin: 20px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--crema-oscura);
+}
+.caso-text { font-size: 14px; line-height: 1.75; color: #4a3728; margin-bottom: 12px; }
+.lista-caso {
+  font-size: 14px;
+  color: #4a3728;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.lista-caso li { line-height: 1.6; }
+
+.alternativas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.alt-card {
+  border: 1px solid var(--crema-oscura);
+  border-radius: 8px;
+  padding: 16px;
+  background: white;
+}
+.alt-card .alt-letra {
+  display: inline-block;
+  background: var(--cafe-medio);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+.alt-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--cafe-oscuro); }
+.alt-card p { font-size: 13px; color: var(--gris-suave); line-height: 1.55; }
+
+.pregunta-central {
+  background: linear-gradient(135deg, var(--verde-andino), #1B4332);
+  color: white;
+  padding: 20px 24px;
+  border-radius: 8px;
+  margin: 20px 0 0;
+  font-family: 'Source Serif 4', serif;
+  font-size: 16px;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.55;
+  text-align: center;
+}
+.pregunta-central::before {
+  content: '❓ Pregunta central';
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 8px;
+}
+
+/* ─── FASE 1: CLASIFICAR ──────────────────────────────────────── */
+.fase1-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) { .fase1-layout { grid-template-columns: 1fr; } }
+
+.banco-panel {
+  grid-column: 1 / -1;
+}
+.banco-titulo {
+  font-family: 'Source Serif 4', serif;
+  font-size: 16px; font-weight: 600;
+  color: var(--cafe-oscuro);
+  margin-bottom: 6px;
+}
+.banco-instruccion {
+  font-size: 13px; color: var(--gris-suave);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.banco-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 60px;
+  padding: 14px;
+  background: white;
+  border: 2px dashed var(--crema-oscura);
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+.banco-cards.drag-over {
+  border-color: var(--cafe-claro);
+  background: var(--crema);
+}
+
+/* tarjetas arrastrables */
+.factor-card {
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+  transition: var(--transition);
+  border: 1.5px solid transparent;
+  max-width: 100%;
+  line-height: 1.4;
+}
+.factor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59,35,20,0.25);
+}
+.factor-card:active { cursor: grabbing; transform: scale(0.97); }
+.factor-card.dragging { opacity: 0.4; }
+
+/* zona de drop con color de cuadrante */
+.drop-zone {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.drop-header {
+  padding: 14px 18px;
+  color: white;
+  display: flex; align-items: center; gap: 10px;
+}
+.drop-header.fortaleza { background: var(--q-fortaleza); }
+.drop-header.debilidad { background: var(--q-debilidad); }
+.drop-header.oportunidad { background: var(--q-oportunidad); }
+.drop-header.amenaza    { background: var(--q-amenaza); }
+
+.drop-header-icon { font-size: 20px; }
+.drop-header-text h3 { font-size: 14px; font-weight: 700; letter-spacing: .5px; }
+.drop-header-text p  { font-size: 12px; opacity: .75; margin-top: 1px; }
+
+.drop-area {
+  min-height: 120px;
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  transition: var(--transition);
+}
+.drop-area.fortaleza-bg   { background: var(--qf-bg); border: 2px dashed #A8D5BE; }
+.drop-area.debilidad-bg   { background: var(--qd-bg); border: 2px dashed #F0AA94; }
+.drop-area.oportunidad-bg { background: var(--qo-bg); border: 2px dashed #8FA8D6; }
+.drop-area.amenaza-bg     { background: var(--qa-bg); border: 2px dashed #C4A07A; }
+.drop-area.drag-over      { filter: brightness(.96); border-style: solid; }
+
+/* tarjetas en cuadrante — color según categoría */
+.factor-card.en-fortaleza   { background: var(--q-fortaleza); border-color: #6ECF9F; }
+.factor-card.en-debilidad   { background: var(--q-debilidad); border-color: #F4A68A; }
+.factor-card.en-oportunidad { background: var(--q-oportunidad); border-color: #7FA8D8; }
+.factor-card.en-amenaza     { background: var(--q-amenaza); border-color: #D4A07A; }
+
+.drop-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.25);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+/* también permitir clic para clasificar en móvil */
+.factor-card .card-menu-btn {
+  display: none;
+  margin-left: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+}
+@media (max-width: 700px) {
+  .factor-card .card-menu-btn { display: inline; }
+}
+
+/* modal de selección para móvil */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(30,15,5,.55);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 90%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-box h3 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 16px; margin-bottom: 6px; color: var(--cafe-oscuro);
+}
+.modal-box p { font-size: 13px; color: var(--gris-suave); margin-bottom: 18px; }
+.modal-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.modal-opt-btn {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.modal-opt-btn:hover { filter: brightness(1.1); transform: scale(1.03); }
+.modal-opt-btn.fortaleza   { background: var(--q-fortaleza); }
+.modal-opt-btn.debilidad   { background: var(--q-debilidad); }
+.modal-opt-btn.oportunidad { background: var(--q-oportunidad); }
+.modal-opt-btn.amenaza     { background: var(--q-amenaza); }
+.modal-cancel {
+  margin-top: 14px;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--crema-oscura);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--gris-suave);
+}
+
+/* ─── VALIDACIÓN FASE 1 ───────────────────────────────────────── */
+.validacion-box {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  display: none;
+}
+.validacion-box.show { display: block; }
+.validacion-box.ok { background: #E8F5EE; border-left: 4px solid var(--verde-andino); color: #1B4332; }
+.validacion-box.warn { background: #FEF9E7; border-left: 4px solid var(--dorado); color: #7D6608; }
+.validacion-box.error { background: #FAEAE4; border-left: 4px solid var(--rojo-andino); color: #7B241C; }
+.val-title { font-weight: 700; margin-bottom: 4px; }
+
+/* ─── FASE 2: MATRIZ FODA ─────────────────────────────────────── */
+.foda-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.matrix-cell {
+  padding: 20px;
+  background: white;
+  min-height: 160px;
+}
+.matrix-cell-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.matrix-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: white;
+}
+.matrix-badge.f { background: var(--q-fortaleza); }
+.matrix-badge.d { background: var(--q-debilidad); }
+.matrix-badge.o { background: var(--q-oportunidad); }
+.matrix-badge.a { background: var(--q-amenaza); }
+.matrix-badge-label { font-size: 13px; font-weight: 600; color: var(--gris-suave); }
+
+.matrix-items { display: flex; flex-direction: column; gap: 6px; }
+.matrix-item {
+  font-size: 13px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  line-height: 1.45;
+  color: white;
+  display: flex; align-items: flex-start; gap: 7px;
+}
+.matrix-item::before { content: '•'; flex-shrink: 0; opacity: 0.7; }
+.matrix-item.f { background: var(--q-fortaleza); }
+.matrix-item.d { background: var(--q-debilidad); }
+.matrix-item.o { background: var(--q-oportunidad); }
+.matrix-item.a { background: var(--q-amenaza); }
+.matrix-empty { font-size: 13px; color: var(--gris-suave); font-style: italic; }
+
+/* ─── LEYENDA ORIGEN ──────────────────────────────────────────── */
+.leyenda-row {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.leyenda-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: var(--gris-suave);
+}
+.leyenda-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+/* ─── FASE 3: ESTRATEGIAS ─────────────────────────────────────── */
+.estrategias-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 640px) { .estrategias-grid { grid-template-columns: 1fr; } }
+
+.est-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.est-header {
+  padding: 16px 20px;
+  color: white;
+  display: flex; align-items: center; gap: 12px;
+}
+.est-header.fo { background: linear-gradient(135deg, var(--q-fortaleza), #1B4332); }
+.est-header.do { background: linear-gradient(135deg, var(--q-oportunidad), #1A3A6B); }
+.est-header.fa { background: linear-gradient(135deg, var(--q-fortaleza), var(--q-amenaza)); }
+.est-header.da { background: linear-gradient(135deg, var(--q-debilidad), var(--q-amenaza)); }
+
+.est-code {
+  font-family: 'Source Serif 4', serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+.est-header-text h3 { font-size: 14px; font-weight: 700; }
+.est-header-text p  { font-size: 12px; opacity: .75; margin-top: 2px; }
+
+.est-body { background: white; padding: 18px 20px; }
+.est-pregunta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-suave);
+  margin-bottom: 10px;
+  font-style: italic;
+}
+.est-textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--crema-oscura);
+  border-radius: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gris-texto);
+  resize: vertical;
+  transition: var(--transition);
+  background: var(--blanco);
+}
+.est-textarea:focus {
+  outline: none;
+  border-color: var(--cafe-medio);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(124,74,34,0.1);
+}
+.est-hint {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.est-char { font-weight: 600; }
+
+/* ─── DECISIÓN FINAL ──────────────────────────────────────────── */
+.decision-card {
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.decision-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(245,237,224,0.12);
+  display: flex; align-items: center; gap: 14px;
+}
+.decision-header h2 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 18px;
+}
+.decision-header p { font-size: 13px; opacity: .6; margin-top: 2px; }
+.decision-body { padding: 20px 24px; }
+
+.alt-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.alt-radio-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(245,237,224,0.06);
+  border: 1.5px solid rgba(245,237,224,0.14);
+  border-radius: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.alt-radio-label:hover { background: rgba(245,237,224,0.12); border-color: var(--cafe-claro); }
+.alt-radio-label input { margin-top: 3px; accent-color: var(--dorado); }
+.alt-radio-label input:checked ~ .alt-radio-text .alt-radio-title { color: var(--dorado-claro); }
+.alt-radio-label:has(input:checked) { border-color: var(--dorado); background: rgba(212,160,23,0.08); }
+.alt-radio-title { font-weight: 600; font-size: 14px; color: var(--crema); }
+.alt-radio-desc { font-size: 13px; color: rgba(245,237,224,0.55); margin-top: 3px; }
+
+.argumentacion-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(245,237,224,0.7);
+  margin-bottom: 8px;
+}
+.argumentacion-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px 14px;
+  background: rgba(245,237,224,0.06);
+  border: 1.5px solid rgba(245,237,224,0.15);
+  border-radius: 7px;
+  color: var(--crema);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: var(--transition);
+}
+.argumentacion-textarea:focus {
+  outline: none;
+  border-color: var(--dorado);
+  background: rgba(245,237,224,0.1);
+}
+.argumentacion-textarea::placeholder { color: rgba(245,237,224,0.3); }
+
+/* ─── PREGUNTAS DE REFLEXIÓN ──────────────────────────────────── */
+.reflexion-card {
+  background: white;
+  border: 1px solid var(--crema-oscura);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.reflexion-header {
+  background: var(--verde-andino);
+  color: white;
+  padding: 16px 22px;
+  display: flex; align-items: center; gap: 10px;
+}
+.reflexion-header h3 { font-family: 'Source Serif 4', serif; font-size: 16px; }
+.reflexion-items {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.reflexion-item {
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.reflexion-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--crema-oscura);
+  color: var(--cafe-oscuro);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.reflexion-item p { font-size: 14px; line-height: 1.6; color: #4a3728; }
+
+/* ─── RESUMEN FINAL ───────────────────────────────────────────── */
+.resumen-card {
+  background: white;
+  border-radius: var(--radius);
+  border: 1px solid var(--crema-oscura);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-top: 20px;
+}
+.resumen-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: 18px;
+  color: var(--cafe-oscuro);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--crema-oscura);
+}
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.resumen-section { }
+.resumen-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: white;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.resumen-section-title.f { background: var(--q-fortaleza); }
+.resumen-section-title.d { background: var(--q-debilidad); }
+.resumen-section-title.o { background: var(--q-oportunidad); }
+.resumen-section-title.a { background: var(--q-amenaza); }
+.resumen-items { font-size: 13px; color: #4a3728; display: flex; flex-direction: column; gap: 4px; }
+.resumen-items li { line-height: 1.5; list-style: none; padding-left: 12px; position: relative; }
+.resumen-items li::before { content: '→'; position: absolute; left: 0; color: var(--gris-suave); font-size: 11px; top: 2px; }
+
+/* ─── CIERRE PEDAGÓGICO ───────────────────────────────────────── */
+.cierre-box {
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-top: 20px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.cierre-box h3 {
+  font-family: 'Source Serif 4', serif;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: var(--dorado-claro);
+}
+
+/* ─── BOTONES DE NAVEGACIÓN ───────────────────────────────────── */
+.nav-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 28px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--cafe-oscuro); color: var(--crema); }
+.btn-primary:hover { background: var(--cafe-medio); }
+.btn-secondary { background: white; color: var(--cafe-oscuro); border: 1.5px solid var(--crema-oscura); }
+.btn-verde { background: var(--verde-andino); color: white; }
+.btn-verde:hover { background: #245A41; }
+.btn-dorado { background: var(--dorado); color: var(--cafe-oscuro); }
+.btn-dorado:hover { background: var(--dorado-claro); }
+
+/* ─── PROGRESS BAR ────────────────────────────────────────────── */
+.progreso-bar-wrap { margin-bottom: 22px; }
+.progreso-label {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--gris-suave); font-weight: 600;
+  margin-bottom: 6px;
+}
+.progreso-track {
+  width: 100%;
+  height: 6px;
+  background: var(--crema-oscura);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progreso-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--verde-andino), var(--dorado));
+  border-radius: 3px;
+  transition: width .5s ease;
+}
+
+/* ─── TOAST NOTIFICATION ──────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--cafe-oscuro);
+  color: var(--crema);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  z-index: 300;
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .site-header { padding: 20px 16px 18px; flex-wrap: wrap; }
+  .header-badge { margin-left: 0; }
+  .stepper { padding: 0 12px; }
+  .main { padding: 20px 12px 50px; }
+  .fase1-layout { grid-template-columns: 1fr; }
+  .foda-matrix { grid-template-columns: 1fr; }
+  .estrategias-grid { grid-template-columns: 1fr; }
+  .data-grid { grid-template-columns: repeat(2, 1fr); }
+  .nav-actions { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────────────────────────────── -->
+<header class="site-header">
+  <div>
+    <div class="header-eyebrow">Gestión de relaciones en las organizaciones</div>
+    <h1 class="header-title">Análisis FODA<br><em style="font-weight:300;font-size:0.75em">Café Andino: crecer sin perder el origen</em></h1>
+    <p class="header-subtitle">Herramienta de diagnóstico estratégico · Actividad grupal</p>
+  </div>
+  <span class="header-badge">⏱ 45–60 min</span>
+</header>
+
+<!-- ─── STEPPER ─────────────────────────────────────────────────── -->
+<nav class="stepper" id="stepper">
+  <button class="step-btn active" onclick="irFase(0)" id="tab0">
+    <span class="step-num">1</span> El caso
+  </button>
+  <span class="step-divider">›</span>
+  <button class="step-btn" onclick="irFase(1)" id="tab1">
+    <span class="step-num">2</span> Clasificar factores
+  </button>
+  <span class="step-divider">›</span>
+  <button class="step-btn" onclick="irFase(2)" id="tab2">
+    <span class="step-num">3</span> Matriz FODA
+  </button>
+  <span class="step-divider">›</span>
+  <button class="step-btn" onclick="irFase(3)" id="tab3">
+    <span class="step-num">4</span> Estrategias
+  </button>
+  <span class="step-divider">›</span>
+  <button class="step-btn" onclick="irFase(4)" id="tab4">
+    <span class="step-num">5</span> Decisión
+  </button>
+</nav>
+
+<!-- ─── MAIN ────────────────────────────────────────────────────── -->
+<main class="main">
+
+<!-- ════════════════════════════════════════════════════════════
+     FASE 0 · EL CASO
+═════════════════════════════════════════════════════════════ -->
+<section class="fase active" id="fase0">
+  <div class="progreso-bar-wrap">
+    <div class="progreso-label"><span>Paso 1 de 5 — Lee el caso antes de clasificar</span><span>20%</span></div>
+    <div class="progreso-track"><div class="progreso-fill" style="width:20%"></div></div>
+  </div>
+
+  <div class="caso-intro">
+    <div class="caso-intro-header">
+      <span class="caso-icon">☕</span>
+      <div>
+        <h2>Café Andino — contexto estratégico</h2>
+        <p>Lima · 8 años de operación · Decisión crítica de expansión</p>
+      </div>
+    </div>
+    <div class="caso-body">
+      <div class="data-grid">
+        <div class="data-card"><div class="dc-label">Locales actuales</div><div class="dc-value">5</div></div>
+        <div class="data-card"><div class="dc-label">Colaboradores</div><div class="dc-value">85</div></div>
+        <div class="data-card"><div class="dc-label">Productores asociados</div><div class="dc-value">12</div></div>
+        <div class="data-card"><div class="dc-label">Comunidad digital</div><div class="dc-value">35 k</div></div>
+        <div class="data-card"><div class="dc-label">Propuesta de inversión</div><div class="dc-value">US$ 1.5 M</div></div>
+        <div class="data-card"><div class="dc-label">Meta de expansión</div><div class="dc-value">20 loc.</div></div>
+      </div>
+
+      <p class="caso-text">Valeria y Diego fundaron Café Andino hace 8 años al dejar trabajos corporativos para crear una cadena de cafeterías basada en café peruano de origen. Desde el inicio, la empresa trabajó directamente con pequeños productores de Cajamarca y Cusco, comunicó una historia de sostenibilidad y diseñó espacios donde los clientes viven una experiencia, no solo consumen café.</p>
+
+      <p class="caso-text">En los últimos 18 meses, el entorno cambió. El mercado de cafeterías especializadas creció rápidamente: aparecieron cadenas internacionales con mayor capital, competidores con precios bajos y apps de delivery. Café Andino todavía recibe pedidos por WhatsApp y redes sociales.</p>
+
+      <p class="caso-text">Internamente, los fundadores siguen tomando la mayoría de decisiones operativas (compras, contrataciones, diseño de productos). Los gerentes de local tienen poca autonomía. Los costos subieron (café, transporte, alquileres en Lima) y algunos clientes comparan precios con opciones más baratas.</p>
+
+      <div class="dilema-box">
+        <p>"El dilema de fondo es si Café Andino debe escalar su modelo o perfeccionarlo antes de crecer."</p>
+        <div class="voces">
+          <div class="voz"><strong>Valeria:</strong> "Nuestro valor está en que cada taza representa una historia y una relación con productores reales. Si crecemos demasiado rápido, podemos convertirnos en una cafetería más."</div>
+          <div class="voz"><strong>Diego:</strong> "Si no crecemos ahora, otras marcas ocuparán ese espacio. Una buena idea que no escala puede desaparecer."</div>
+        </div>
+      </div>
+
+      <h3 class="caso-section-title">Las tres alternativas estratégicas</h3>
+      <div class="alternativas-grid">
+        <div class="alt-card">
+          <span class="alt-letra">A</span>
+          <h4>Expansión acelerada</h4>
+          <p>Aceptar la inversión completa (US$ 1.5 M) y abrir 20 locales en 3 años con franquicias.</p>
+        </div>
+        <div class="alt-card">
+          <span class="alt-letra">B</span>
+          <h4>Consolidación antes de crecer</h4>
+          <p>Mantener los 5 locales, profesionalizar procesos e invertir en digitalización.</p>
+        </div>
+        <div class="alt-card">
+          <span class="alt-letra">C</span>
+          <h4>Crecimiento selectivo</h4>
+          <p>Aceptar inversión parcial, crecer con criterios estrictos de calidad y cultura.</p>
+        </div>
+      </div>
+
+      <div class="pregunta-central">
+        ¿Qué estrategia debería seguir Café Andino para asegurar su crecimiento sin destruir aquello que la hizo exitosa?
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-actions">
+    <span style="font-size:13px;color:var(--gris-suave)">Lee el caso con tu grupo antes de continuar.</span>
+    <button class="btn btn-primary" onclick="irFase(1)">Continuar → Clasificar factores</button>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     FASE 1 · CLASIFICAR FACTORES
+═════════════════════════════════════════════════════════════ -->
+<section class="fase" id="fase1">
+  <div class="progreso-bar-wrap">
+    <div class="progreso-label"><span>Paso 2 de 5 — Arrastra cada factor al cuadrante correcto</span><span id="prog1-pct">40%</span></div>
+    <div class="progreso-track"><div class="progreso-fill" id="prog1-fill" style="width:40%"></div></div>
+  </div>
+
+  <!-- BANCO -->
+  <div class="banco-panel" style="margin-bottom:20px;">
+    <div class="banco-titulo">☕ Banco de factores del caso</div>
+    <div class="banco-instruccion">
+      <span>🖱</span>
+      <span>Arrastra cada tarjeta al cuadrante donde mejor encaja: Fortaleza, Debilidad, Oportunidad o Amenaza. En móvil, toca la flecha (›) de cada tarjeta para elegir.</span>
+    </div>
+    <div class="banco-cards" id="banco" ondragover="onDragOver(event,'banco')" ondrop="onDrop(event,'banco')" ondragleave="onDragLeave(event,'banco')">
+      <!-- tarjetas generadas por JS -->
+    </div>
+  </div>
+
+  <!-- GRID DE ZONAS -->
+  <div class="fase1-layout">
+    <!-- Fortaleza -->
+    <div class="drop-zone">
+      <div class="drop-header fortaleza">
+        <span class="drop-header-icon">💪</span>
+        <div class="drop-header-text">
+          <h3>FORTALEZAS</h3>
+          <p>Factores internos positivos</p>
+        </div>
+        <span class="drop-count" id="cnt-fortaleza">0</span>
+      </div>
+      <div class="drop-area fortaleza-bg" id="zona-fortaleza"
+           ondragover="onDragOver(event,'fortaleza')"
+           ondrop="onDrop(event,'fortaleza')"
+           ondragleave="onDragLeave(event,'fortaleza')">
+      </div>
+    </div>
+    <!-- Debilidad -->
+    <div class="drop-zone">
+      <div class="drop-header debilidad">
+        <span class="drop-header-icon">⚠️</span>
+        <div class="drop-header-text">
+          <h3>DEBILIDADES</h3>
+          <p>Factores internos negativos</p>
+        </div>
+        <span class="drop-count" id="cnt-debilidad">0</span>
+      </div>
+      <div class="drop-area debilidad-bg" id="zona-debilidad"
+           ondragover="onDragOver(event,'debilidad')"
+           ondrop="onDrop(event,'debilidad')"
+           ondragleave="onDragLeave(event,'debilidad')">
+      </div>
+    </div>
+    <!-- Oportunidad -->
+    <div class="drop-zone">
+      <div class="drop-header oportunidad">
+        <span class="drop-header-icon">🌱</span>
+        <div class="drop-header-text">
+          <h3>OPORTUNIDADES</h3>
+          <p>Factores externos positivos</p>
+        </div>
+        <span class="drop-count" id="cnt-oportunidad">0</span>
+      </div>
+      <div class="drop-area oportunidad-bg" id="zona-oportunidad"
+           ondragover="onDragOver(event,'oportunidad')"
+           ondrop="onDrop(event,'oportunidad')"
+           ondragleave="onDragLeave(event,'oportunidad')">
+      </div>
+    </div>
+    <!-- Amenaza -->
+    <div class="drop-zone">
+      <div class="drop-header amenaza">
+        <span class="drop-header-icon">🔴</span>
+        <div class="drop-header-text">
+          <h3>AMENAZAS</h3>
+          <p>Factores externos negativos</p>
+        </div>
+        <span class="drop-count" id="cnt-amenaza">0</span>
+      </div>
+      <div class="drop-area amenaza-bg" id="zona-amenaza"
+           ondragover="onDragOver(event,'amenaza')"
+           ondrop="onDrop(event,'amenaza')"
+           ondragleave="onDragLeave(event,'amenaza')">
+      </div>
+    </div>
+  </div>
+
+  <!-- Validación -->
+  <div class="validacion-box" id="val-box">
+    <div class="val-title" id="val-title"></div>
+    <div id="val-msg"></div>
+  </div>
+
+  <div class="nav-actions">
+    <button class="btn btn-secondary" onclick="irFase(0)">← Volver</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="btn btn-secondary" onclick="validarFase1(true)">Verificar clasificación</button>
+      <button class="btn btn-verde" onclick="avanzarFase1()">Ver mi matriz FODA →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     FASE 2 · MATRIZ FODA
+═════════════════════════════════════════════════════════════ -->
+<section class="fase" id="fase2">
+  <div class="progreso-bar-wrap">
+    <div class="progreso-label"><span>Paso 3 de 5 — Tu diagnóstico FODA</span><span>60%</span></div>
+    <div class="progreso-track"><div class="progreso-fill" style="width:60%"></div></div>
+  </div>
+
+  <div class="leyenda-row">
+    <span class="leyenda-item"><span class="leyenda-dot" style="background:var(--q-fortaleza)"></span>Fortaleza</span>
+    <span class="leyenda-item"><span class="leyenda-dot" style="background:var(--q-debilidad)"></span>Debilidad</span>
+    <span class="leyenda-item"><span class="leyenda-dot" style="background:var(--q-oportunidad)"></span>Oportunidad</span>
+    <span class="leyenda-item"><span class="leyenda-dot" style="background:var(--q-amenaza)"></span>Amenaza</span>
+    <span style="font-size:12px;color:var(--gris-suave);margin-left:auto;">Origen: 🏠 interno  /  🌍 externo</span>
+  </div>
+
+  <div class="foda-matrix" id="foda-matrix">
+    <div class="matrix-cell">
+      <div class="matrix-cell-header">
+        <span class="matrix-badge f">F</span>
+        <span class="matrix-badge-label">Fortalezas</span>
+      </div>
+      <div class="matrix-items" id="mat-fortaleza"></div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-cell-header">
+        <span class="matrix-badge d">D</span>
+        <span class="matrix-badge-label">Debilidades</span>
+      </div>
+      <div class="matrix-items" id="mat-debilidad"></div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-cell-header">
+        <span class="matrix-badge o">O</span>
+        <span class="matrix-badge-label">Oportunidades</span>
+      </div>
+      <div class="matrix-items" id="mat-oportunidad"></div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-cell-header">
+        <span class="matrix-badge a">A</span>
+        <span class="matrix-badge-label">Amenazas</span>
+      </div>
+      <div class="matrix-items" id="mat-amenaza"></div>
+    </div>
+  </div>
+
+  <div class="reflexion-card">
+    <div class="reflexion-header">
+      <span>🔍</span>
+      <h3>Preguntas de análisis — discusión grupal</h3>
+    </div>
+    <div class="reflexion-items">
+      <div class="reflexion-item"><span class="reflexion-num">1</span><p>¿Qué elementos del caso representan verdaderas fortalezas y cuáles son solo ventajas actuales que podrían desaparecer?</p></div>
+      <div class="reflexion-item"><span class="reflexion-num">2</span><p>¿La cultura basada en los fundadores es una fortaleza o una debilidad para escalar? ¿Por qué depende del contexto?</p></div>
+      <div class="reflexion-item"><span class="reflexion-num">3</span><p>¿El crecimiento del mercado de café especializado es una oportunidad suficiente para justificar una expansión rápida?</p></div>
+      <div class="reflexion-item"><span class="reflexion-num">4</span><p>¿La propuesta de los inversionistas (US$ 1.5 M) es una oportunidad o una amenaza para la identidad de la marca?</p></div>
+    </div>
+  </div>
+
+  <div class="nav-actions">
+    <button class="btn btn-secondary" onclick="irFase(1)">← Volver a clasificar</button>
+    <button class="btn btn-verde" onclick="irFase(3)">Formular estrategias →</button>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     FASE 3 · ESTRATEGIAS
+═════════════════════════════════════════════════════════════ -->
+<section class="fase" id="fase3">
+  <div class="progreso-bar-wrap">
+    <div class="progreso-label"><span>Paso 4 de 5 — Formula las estrategias cruzadas</span><span>80%</span></div>
+    <div class="progreso-track"><div class="progreso-fill" style="width:80%"></div></div>
+  </div>
+
+  <p style="font-size:14px;color:var(--gris-suave);margin-bottom:18px;">El FODA no termina en el diagnóstico. Su valor está en las estrategias que surgen del cruce de factores. Completa cada cuadrante estratégico con una propuesta argumentada para Café Andino.</p>
+
+  <div class="estrategias-grid">
+    <!-- FO -->
+    <div class="est-card">
+      <div class="est-header fo">
+        <span class="est-code">FO</span>
+        <div class="est-header-text">
+          <h3>Aprovechar fortalezas para explotar oportunidades</h3>
+          <p>Estrategia ofensiva / de crecimiento</p>
+        </div>
+      </div>
+      <div class="est-body">
+        <p class="est-pregunta">¿Cómo puede Café Andino usar lo que hace bien para aprovechar lo que el entorno ofrece?</p>
+        <textarea class="est-textarea" id="txt-fo" placeholder="Ej: Usar la relación con productores y la comunidad digital de 35 000 seguidores para posicionar la marca en turismo gastronómico y expandir canales de venta digitales..." oninput="contarCaracteres('fo')"></textarea>
+        <p class="est-hint">Conecta al menos <span class="est-char" id="char-fo">0</span> / 80 caracteres · Relaciona fortalezas y oportunidades de tu FODA.</p>
+      </div>
+    </div>
+    <!-- DO -->
+    <div class="est-card">
+      <div class="est-header do">
+        <span class="est-code">DO</span>
+        <div class="est-header-text">
+          <h3>Usar oportunidades para superar debilidades</h3>
+          <p>Estrategia de reorientación</p>
+        </div>
+      </div>
+      <div class="est-body">
+        <p class="est-pregunta">¿Qué oportunidades del entorno pueden ayudar a corregir las debilidades internas?</p>
+        <textarea class="est-textarea" id="txt-do" placeholder="Ej: Aprovechar el crecimiento del mercado digital para implementar una app propia que estandarice pedidos y reduzca la dependencia de los fundadores en decisiones operativas..." oninput="contarCaracteres('do')"></textarea>
+        <p class="est-hint">Conecta al menos <span class="est-char" id="char-do">0</span> / 80 caracteres · Relaciona oportunidades y debilidades de tu FODA.</p>
+      </div>
+    </div>
+    <!-- FA -->
+    <div class="est-card">
+      <div class="est-header fa">
+        <span class="est-code">FA</span>
+        <div class="est-header-text">
+          <h3>Usar fortalezas para reducir amenazas</h3>
+          <p>Estrategia defensiva</p>
+        </div>
+      </div>
+      <div class="est-body">
+        <p class="est-pregunta">¿Cómo pueden las fortalezas de Café Andino protegerla de las amenazas del entorno?</p>
+        <textarea class="est-textarea" id="txt-fa" placeholder="Ej: Fortalecer el storytelling de origen y los contratos estables con productores para diferenciarse de cadenas internacionales que no pueden ofrecer esa autenticidad..." oninput="contarCaracteres('fa')"></textarea>
+        <p class="est-hint">Conecta al menos <span class="est-char" id="char-fa">0</span> / 80 caracteres · Relaciona fortalezas y amenazas de tu FODA.</p>
+      </div>
+    </div>
+    <!-- DA -->
+    <div class="est-card">
+      <div class="est-header da">
+        <span class="est-code">DA</span>
+        <div class="est-header-text">
+          <h3>Minimizar debilidades para evitar amenazas</h3>
+          <p>Estrategia de supervivencia</p>
+        </div>
+      </div>
+      <div class="est-body">
+        <p class="est-pregunta">¿Qué debilidades deben resolverse urgentemente para que las amenazas no se vuelvan crisis?</p>
+        <textarea class="est-textarea" id="txt-da" placeholder="Ej: Profesionalizar los procesos de gestión y delegar autonomía a los gerentes de local antes de expandirse, para evitar que la dependencia de los fundadores se convierta en un cuello de botella crítico ante la presión competitiva..." oninput="contarCaracteres('da')"></textarea>
+        <p class="est-hint">Conecta al menos <span class="est-char" id="char-da">0</span> / 80 caracteres · Relaciona debilidades y amenazas de tu FODA.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-actions">
+    <button class="btn btn-secondary" onclick="irFase(2)">← Volver a la matriz</button>
+    <button class="btn btn-dorado" onclick="irFase(4)">Tomar la decisión →</button>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     FASE 4 · DECISIÓN
+═════════════════════════════════════════════════════════════ -->
+<section class="fase" id="fase4">
+  <div class="progreso-bar-wrap">
+    <div class="progreso-label"><span>Paso 5 de 5 — Decisión y cierre</span><span>100%</span></div>
+    <div class="progreso-track"><div class="progreso-fill" style="width:100%"></div></div>
+  </div>
+
+  <!-- Decisión -->
+  <div class="decision-card">
+    <div class="decision-header">
+      <span style="font-size:28px">🎯</span>
+      <div>
+        <h2>¿Qué decide el directorio?</h2>
+        <p>Basándose en su FODA y sus estrategias, el grupo debe elegir una alternativa y argumentarla.</p>
+      </div>
+    </div>
+    <div class="decision-body">
+      <div class="alt-radios">
+        <label class="alt-radio-label">
+          <input type="radio" name="decision" value="A">
+          <div class="alt-radio-text">
+            <div class="alt-radio-title">Alternativa A — Expansión acelerada</div>
+            <div class="alt-radio-desc">Aceptar la inversión completa y abrir 20 locales en 3 años.</div>
+          </div>
+        </label>
+        <label class="alt-radio-label">
+          <input type="radio" name="decision" value="B">
+          <div class="alt-radio-text">
+            <div class="alt-radio-title">Alternativa B — Consolidación primero</div>
+            <div class="alt-radio-desc">Mantener los 5 locales, profesionalizar procesos y digitalizar.</div>
+          </div>
+        </label>
+        <label class="alt-radio-label">
+          <input type="radio" name="decision" value="C">
+          <div class="alt-radio-text">
+            <div class="alt-radio-title">Alternativa C — Crecimiento selectivo</div>
+            <div class="alt-radio-desc">Inversión parcial, criterios estrictos de calidad y cultura.</div>
+          </div>
+        </label>
+      </div>
+      <label class="argumentacion-label">¿Por qué? Argumenta basándote en tu diagnóstico FODA y las estrategias formuladas.</label>
+      <textarea class="argumentacion-textarea" id="txt-decision" rows="4" placeholder="Nuestra decisión como directorio es la alternativa ___ porque... Las fortalezas que nos respaldan son... La debilidad más urgente que debemos resolver es... La amenaza más crítica que esta estrategia mitiga es..."></textarea>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen-card">
+    <h2 class="resumen-title">📋 Resumen de tu diagnóstico</h2>
+    <div class="resumen-grid" id="resumen-grid"></div>
+    <div style="margin-top:4px;" id="resumen-estrategias"></div>
+  </div>
+
+  <!-- Cierre pedagógico -->
+  <div class="cierre-box">
+    <h3>💡 Para recordar: el FODA no es una lista</h3>
+    <p>Dos grupos pueden usar el mismo caso y llegar a decisiones estratégicas diferentes. Eso es correcto. La calidad no está en qué alternativa eligieron, sino en la solidez de su argumentación: ¿los factores que identificaron realmente explican su decisión? ¿Las estrategias cruzadas son coherentes con el diagnóstico?</p>
+    <p style="margin-top:10px;opacity:0.7;font-size:13px;">El FODA es una metodología para <em>interpretar</em> la realidad organizacional, no para describirla. Cuando sirve de verdad, permite que personas razonables lleguen a decisiones distintas y las defiendan con argumentos.</p>
+  </div>
+
+  <div class="nav-actions">
+    <button class="btn btn-secondary" onclick="irFase(3)">← Volver a estrategias</button>
+    <button class="btn btn-verde" onclick="reiniciar()">🔄 Nueva sesión</button>
+  </div>
+</section>
+
+</main><!-- /main -->
+
+<!-- ─── MODAL MÓVIL ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal" onclick="cerrarModal(event)">
+  <div class="modal-box">
+    <h3 id="modal-title">Clasificar factor</h3>
+    <p id="modal-texto"></p>
+    <div class="modal-options">
+      <button class="modal-opt-btn fortaleza"   onclick="clasificarDesdeModal('fortaleza')">💪 Fortaleza</button>
+      <button class="modal-opt-btn debilidad"   onclick="clasificarDesdeModal('debilidad')">⚠️ Debilidad</button>
+      <button class="modal-opt-btn oportunidad" onclick="clasificarDesdeModal('oportunidad')">🌱 Oportunidad</button>
+      <button class="modal-opt-btn amenaza"     onclick="clasificarDesdeModal('amenaza')">🔴 Amenaza</button>
+    </div>
+    <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ─── TOAST ─────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- ─── SCRIPT ─────────────────────────────────────────────────────── -->
+<script>
+// ══════════════════════════════════════════
+//  DATOS — factores del caso
+// ══════════════════════════════════════════
+const FACTORES = [
+  { id:'f1', texto:'Marca con identidad propia y propuesta de valor clara basada en origen peruano', sugerido:'fortaleza' },
+  { id:'f2', texto:'Relación directa y estable con 12 productores agrícolas de Cajamarca y Cusco', sugerido:'fortaleza' },
+  { id:'f3', texto:'Comunidad digital fiel de 35 000 seguidores y clientes frecuentes leales', sugerido:'fortaleza' },
+  { id:'f4', texto:'Calidad diferenciada del producto y experiencia de consumo auténtica', sugerido:'fortaleza' },
+  { id:'f5', texto:'Conocimiento profundo del mercado local y cultura organizacional propia', sugerido:'fortaleza' },
+  { id:'d1', texto:'Procesos internos poco profesionalizados: fundadores toman decisiones operativas', sugerido:'debilidad' },
+  { id:'d2', texto:'Gerentes de local con poca autonomía — "la empresa creció más rápido que sus procesos"', sugerido:'debilidad' },
+  { id:'d3', texto:'Baja inversión tecnológica: pedidos aún vía WhatsApp y redes sociales', sugerido:'debilidad' },
+  { id:'d4', texto:'Costos elevados (café, transporte, alquileres) que presionan los márgenes', sugerido:'debilidad' },
+  { id:'d5', texto:'Capacidad limitada de expansión sin comprometer el control de calidad', sugerido:'debilidad' },
+  { id:'o1', texto:'Crecimiento del mercado de café especializado y del consumidor consciente', sugerido:'oportunidad' },
+  { id:'o2', texto:'Mayor interés social por productos locales, sostenibles y de comercio justo', sugerido:'oportunidad' },
+  { id:'o3', texto:'Auge del turismo gastronómico en Lima y regiones peruanas', sugerido:'oportunidad' },
+  { id:'o4', texto:'Disponibilidad de canales digitales y plataformas de delivery para escalar ventas', sugerido:'oportunidad' },
+  { id:'o5', texto:'Propuesta de inversión de US$ 1.5 M que permitiría abrir 20 locales en 3 años', sugerido:'oportunidad' },
+  { id:'a1', texto:'Entrada de cadenas internacionales con mayor capital y tecnología consolidada', sugerido:'amenaza' },
+  { id:'a2', texto:'Competidores con precios más bajos mediante modelos estandarizados de producción', sugerido:'amenaza' },
+  { id:'a3', texto:'Cambios climáticos que afectan la producción y elevan el costo del café de origen', sugerido:'amenaza' },
+  { id:'a4', texto:'Clientes jóvenes que valoran la experiencia digital (apps, puntos, entrega rápida)', sugerido:'amenaza' },
+  { id:'a5', texto:'Riesgo de diluir la cultura y calidad de la marca al estandarizar para franquicias', sugerido:'amenaza' },
+];
+
+// ══════════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════════
+const estado = {
+  clasificacion: {}, // { id: 'fortaleza' | 'debilidad' | ... }
+  cardArrastrada: null,
+  cardModalActual: null,
+  faseActual: 0,
+};
+
+// ══════════════════════════════════════════
+//  INICIALIZACIÓN
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  construirBanco();
+  actualizarContadores();
+});
+
+function construirBanco() {
+  const banco = document.getElementById('banco');
+  banco.innerHTML = '';
+  FACTORES.forEach(f => {
+    if (!estado.clasificacion[f.id]) {
+      banco.appendChild(crearTarjeta(f.id, f.texto, null));
+    }
+  });
+}
+
+function crearTarjeta(id, texto, categoria) {
+  const card = document.createElement('div');
+  card.classList.add('factor-card');
+  if (categoria) card.classList.add(`en-${categoria}`);
+  card.id = `card-${id}`;
+  card.draggable = true;
+  card.innerHTML = `${texto}<button class="card-menu-btn" title="Clasificar" onclick="abrirModal('${id}')">›</button>`;
+  card.addEventListener('dragstart', (e) => {
+    estado.cardArrastrada = id;
+    setTimeout(() => card.classList.add('dragging'), 0);
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    estado.cardArrastrada = null;
+  });
+  return card;
+}
+
+// ══════════════════════════════════════════
+//  DRAG & DROP
+// ══════════════════════════════════════════
+function onDragOver(e, zona) {
+  e.preventDefault();
+  const el = zona === 'banco' ? document.getElementById('banco') : document.getElementById(`zona-${zona}`);
+  el.classList.add('drag-over');
+}
+function onDragLeave(e, zona) {
+  const el = zona === 'banco' ? document.getElementById('banco') : document.getElementById(`zona-${zona}`);
+  el.classList.remove('drag-over');
+}
+function onDrop(e, zona) {
+  e.preventDefault();
+  const el = zona === 'banco' ? document.getElementById('banco') : document.getElementById(`zona-${zona}`);
+  el.classList.remove('drag-over');
+  const id = estado.cardArrastrada;
+  if (!id) return;
+
+  // actualizar estado
+  if (zona === 'banco') {
+    delete estado.clasificacion[id];
+  } else {
+    estado.clasificacion[id] = zona;
+  }
+  redibujarTarjetas();
+  actualizarContadores();
+  ocultarValidacion();
+}
+
+function redibujarTarjetas() {
+  // limpiar banco y zonas
+  ['banco','fortaleza','debilidad','oportunidad','amenaza'].forEach(z => {
+    const el = z === 'banco' ? document.getElementById('banco') : document.getElementById(`zona-${z}`);
+    el.innerHTML = '';
+  });
+  // redibujar
+  FACTORES.forEach(f => {
+    const cat = estado.clasificacion[f.id];
+    const card = crearTarjeta(f.id, f.texto, cat);
+    if (!cat) {
+      document.getElementById('banco').appendChild(card);
+    } else {
+      document.getElementById(`zona-${cat}`).appendChild(card);
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+//  MODAL PARA MÓVIL
+// ══════════════════════════════════════════
+function abrirModal(id) {
+  const f = FACTORES.find(x => x.id === id);
+  estado.cardModalActual = id;
+  document.getElementById('modal-title').textContent = 'Clasificar factor';
+  document.getElementById('modal-texto').textContent = f.texto;
+  document.getElementById('modal').classList.add('open');
+}
+function cerrarModal(e) {
+  if (e && e.target !== document.getElementById('modal')) return;
+  document.getElementById('modal').classList.remove('open');
+  estado.cardModalActual = null;
+}
+function clasificarDesdeModal(categoria) {
+  if (!estado.cardModalActual) return;
+  estado.clasificacion[estado.cardModalActual] = categoria;
+  redibujarTarjetas();
+  actualizarContadores();
+  ocultarValidacion();
+  document.getElementById('modal').classList.remove('open');
+  estado.cardModalActual = null;
+}
+
+// ══════════════════════════════════════════
+//  CONTADORES
+// ══════════════════════════════════════════
+function actualizarContadores() {
+  ['fortaleza','debilidad','oportunidad','amenaza'].forEach(z => {
+    const n = Object.values(estado.clasificacion).filter(v => v === z).length;
+    document.getElementById(`cnt-${z}`).textContent = n;
+  });
+}
+
+// ══════════════════════════════════════════
+//  VALIDACIÓN FASE 1
+// ══════════════════════════════════════════
+const CLAVES_OK = { // factores con clasificación pedagógicamente sólida
+  fortaleza:   ['f1','f2','f3','f4','f5'],
+  debilidad:   ['d1','d2','d3','d4','d5'],
+  oportunidad: ['o1','o2','o3','o4'],
+  amenaza:     ['a1','a2','a3','a4','a5'],
+};
+// o5 es ambiguo (puede ser O o A), se valida aparte
+
+function validarFase1(mostrarFeedback) {
+  const total = Object.keys(estado.clasificacion).length;
+  const enBanco = FACTORES.length - total;
+  const box = document.getElementById('val-box');
+  const title = document.getElementById('val-title');
+  const msg = document.getElementById('val-msg');
+
+  if (total < 8) {
+    box.className = 'validacion-box show warn';
+    title.textContent = '⚠ Faltan tarjetas por clasificar';
+    msg.textContent = `Tienes ${enBanco} factor(es) sin clasificar. Arrastra todas las tarjetas antes de continuar.`;
+    return false;
+  }
+
+  // detectar ambigüedades pedagógicas notables
+  const notas = [];
+  // o5 (propuesta inversionistas) puede ser O o A — es el punto de mayor tensión
+  const cat_o5 = estado.clasificacion['o5'];
+  if (cat_o5 === 'amenaza') notas.push('La propuesta de los inversionistas (US$ 1.5 M) la ubicaste en <strong>Amenazas</strong> — ¡decisión válida y con mucho argumento! ¿Por qué crees que el dinero puede ser también una amenaza para la identidad de Café Andino?');
+  if (cat_o5 === 'oportunidad') notas.push('La propuesta de inversión la ubicaste en <strong>Oportunidades</strong>. Recuerda que el caso plantea riesgos de pérdida de identidad — ¿cambiarías algo?');
+
+  // d1/d2 (dependencia fundadores) — algunas personas lo ubican en fortaleza (control de calidad)
+  const cat_d1 = estado.clasificacion['d1'];
+  if (cat_d1 === 'fortaleza') notas.push('La "dependencia de los fundadores" la clasificaste como <strong>Fortaleza</strong>. Es una perspectiva posible (garantiza calidad), pero el caso también la describe como freno al crecimiento. ¿Cómo lo argumentarías?');
+
+  if (mostrarFeedback) {
+    if (notas.length > 0) {
+      box.className = 'validacion-box show warn';
+      title.textContent = '🔍 Puntos para discutir en tu grupo';
+      msg.innerHTML = notas.map(n => `<p style="margin-top:6px">• ${n}</p>`).join('');
+    } else if (total === FACTORES.length) {
+      box.className = 'validacion-box show ok';
+      title.textContent = '✓ Clasificación completa';
+      msg.textContent = 'Clasificaste todos los factores. Recuerda que no existe una única respuesta correcta — lo importante es que puedas argumentar cada decisión. Continúa para ver tu matriz FODA.';
+    } else {
+      box.className = 'validacion-box show ok';
+      title.textContent = `✓ Buena distribución (${total} de ${FACTORES.length} clasificados)`;
+      msg.textContent = `Quedan ${enBanco} factor(es) sin clasificar. Puedes continuar o regresar al banco para clasificarlos.`;
+    }
+  }
+  return total >= 8;
+}
+
+function ocultarValidacion() {
+  document.getElementById('val-box').classList.remove('show');
+}
+
+function avanzarFase1() {
+  if (!validarFase1(true)) return;
+  construirMatriz();
+  irFase(2);
+}
+
+// ══════════════════════════════════════════
+//  CONSTRUIR MATRIZ FODA
+// ══════════════════════════════════════════
+function construirMatriz() {
+  const zonas = { fortaleza:'f', debilidad:'d', oportunidad:'o', amenaza:'a' };
+  Object.entries(zonas).forEach(([zona, cls]) => {
+    const el = document.getElementById(`mat-${zona}`);
+    el.innerHTML = '';
+    const ids = Object.entries(estado.clasificacion).filter(([,v]) => v === zona).map(([k]) => k);
+    if (ids.length === 0) {
+      el.innerHTML = '<span class="matrix-empty">Sin factores clasificados aquí.</span>';
+      return;
+    }
+    ids.forEach(id => {
+      const f = FACTORES.find(x => x.id === id);
+      const item = document.createElement('div');
+      item.className = `matrix-item ${cls}`;
+      item.textContent = f.texto;
+      el.appendChild(item);
+    });
+  });
+}
+
+// ══════════════════════════════════════════
+//  CONTEO DE CARACTERES ESTRATEGIAS
+// ══════════════════════════════════════════
+function contarCaracteres(tipo) {
+  const n = document.getElementById(`txt-${tipo}`).value.length;
+  const el = document.getElementById(`char-${tipo}`);
+  if (el) el.textContent = n;
+}
+
+// ══════════════════════════════════════════
+//  RESUMEN FASE 4
+// ══════════════════════════════════════════
+function construirResumen() {
+  // grid de factores
+  const grid = document.getElementById('resumen-grid');
+  grid.innerHTML = '';
+  const zonas = [
+    { z:'fortaleza', cls:'f', label:'Fortalezas' },
+    { z:'debilidad', cls:'d', label:'Debilidades' },
+    { z:'oportunidad', cls:'o', label:'Oportunidades' },
+    { z:'amenaza', cls:'a', label:'Amenazas' },
+  ];
+  zonas.forEach(({z, cls, label}) => {
+    const ids = Object.entries(estado.clasificacion).filter(([,v]) => v === z).map(([k]) => k);
+    const sec = document.createElement('div');
+    sec.className = 'resumen-section';
+    sec.innerHTML = `<span class="resumen-section-title ${cls}">${label}</span>`;
+    const ul = document.createElement('ul');
+    ul.className = 'resumen-items';
+    ids.forEach(id => {
+      const f = FACTORES.find(x => x.id === id);
+      const li = document.createElement('li');
+      li.textContent = f.texto;
+      ul.appendChild(li);
+    });
+    if (ids.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = '(ninguno clasificado)';
+      ul.appendChild(li);
+    }
+    sec.appendChild(ul);
+    grid.appendChild(sec);
+  });
+
+  // estrategias
+  const est = document.getElementById('resumen-estrategias');
+  const estrategias = [
+    { tipo:'FO', id:'txt-fo' },
+    { tipo:'DO', id:'txt-do' },
+    { tipo:'FA', id:'txt-fa' },
+    { tipo:'DA', id:'txt-da' },
+  ];
+  const contenido = estrategias
+    .filter(e => document.getElementById(e.id).value.trim())
+    .map(e => `<div style="margin-bottom:10px"><strong style="color:var(--cafe-medio)">${e.tipo}:</strong> <span style="font-size:13px;color:#4a3728">${document.getElementById(e.id).value}</span></div>`)
+    .join('');
+  est.innerHTML = contenido ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--crema-oscura)">${contenido}</div>` : '';
+}
+
+// ══════════════════════════════════════════
+//  NAVEGACIÓN POR FASES
+// ══════════════════════════════════════════
+function irFase(n) {
+  // actualizar fases
+  document.querySelectorAll('.fase').forEach((el, i) => {
+    el.classList.toggle('active', i === n);
+  });
+  // actualizar tabs
+  document.querySelectorAll('.step-btn').forEach((btn, i) => {
+    btn.classList.remove('active','done');
+    if (i === n) btn.classList.add('active');
+    else if (i < n) btn.classList.add('done');
+  });
+  estado.faseActual = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // acciones al entrar en cada fase
+  if (n === 4) construirResumen();
+}
+
+// ══════════════════════════════════════════
+//  REINICIAR
+// ══════════════════════════════════════════
+function reiniciar() {
+  estado.clasificacion = {};
+  estado.cardArrastrada = null;
+  estado.cardModalActual = null;
+  // limpiar textareas
+  ['fo','do','fa','da'].forEach(t => {
+    const el = document.getElementById(`txt-${t}`);
+    if (el) { el.value = ''; }
+    const ch = document.getElementById(`char-${t}`);
+    if (ch) ch.textContent = '0';
+  });
+  const tdec = document.getElementById('txt-decision');
+  if (tdec) tdec.value = '';
+  document.querySelectorAll('input[name="decision"]').forEach(r => r.checked = false);
+  construirBanco();
+  actualizarContadores();
+  ocultarValidacion();
+  irFase(0);
+  mostrarToast('Nueva sesión iniciada ☕');
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function mostrarToast(msg, dur = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+</script>
+</body>
+</html>
