@@ -258,7 +258,7 @@ Diseño pedagógico: Basado en metodologías activas de enseñanza de estrategia
 
 text
 ☕ Café Andino · Crecer sin perder el origen
-📌 Cómo usar este README
+
 Reemplaza tuusuario por tu nombre de usuario de GitHub
 
 Reemplaza tuemail@institucion.edu por tu email real
