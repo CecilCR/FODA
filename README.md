@@ -259,18 +259,10 @@ Diseño pedagógico: Basado en metodologías activas de enseñanza de estrategia
 
 Fuentes: Source Serif 4 + Inter (Google Fonts)
 
-text
+
 ☕ Café Andino · Crecer sin perder el origen
 🌱 Herramienta pedagógica abierta · v2.1
-✍️ Créditos
-Elaborado por CCR
-Curso: Gestión de las Relaciones en las Organizaciones
-
-
-Antes de publicar, reemplaza estos valores:
-
 Placeholder	CecilCR
-
 pdce.encuesta@gmail.com
 
 URL de GitHub Pages	La URL real después de activar Pages
