@@ -269,22 +269,14 @@ Curso: Gestión de las Relaciones en las Organizaciones
 
 Antes de publicar, reemplaza estos valores:
 
-Placeholder	Reemplazar por
-tuusuario	Tu nombre de usuario de GitHub
-tuemail@institucion.edu	Tu correo electrónico real
+Placeholder	CecilCR
+
+pdce.encuesta@gmail.com
+
 URL de GitHub Pages	La URL real después de activar Pages
 og-preview.jpg	Tu imagen de vista previa (1200×630px)
-CCR	Nombre completo del autor
-text
 
----
-
-✅ La sección de créditos quedó añadida al final del README con el formato:
 ✍️ Créditos
 Elaborado por CCR
-
 Curso: Gestión de las Relaciones en las Organizaciones
 
-text
-
-¿Necesitas ajustar el nombre "CCR" por el nombre completo o algún otro detalle?
