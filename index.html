@@ -7,6 +7,10 @@
 <meta property="og:title" content="Análisis FODA — Café Andino">
 <meta property="og:description" content="Herramienta interactiva para construir el diagnóstico estratégico del caso Café Andino">
 <meta property="og:type" content="sitio-web">
+<meta name="description" content="Herramienta interactiva de análisis FODA aplicada al caso Café Andino. Actividad grupal — curso Gestión de las Relaciones en las Organizaciones.">
+<meta name="theme-color" content="#3B2314">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ─── TOKENS ─────────────────────────────────────────────────── */
@@ -148,6 +152,13 @@ body {
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fase { animation: none; }
+  .btn, .factor-card, .modal-opt-btn, .step-btn { transition: none; }
+  .progreso-fill { transition: none; }
+  .toast { transition: none; }
 }
 
 /* ─── FASE 0: CASO ────────────────────────────────────────────── */
@@ -867,6 +878,21 @@ body {
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* ─── FOCUS VISIBLE (navegación por teclado) ─────────────────── */
+:focus-visible {
+  outline: 3px solid var(--dorado);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.factor-card:focus-visible {
+  outline: 3px solid var(--dorado-claro);
+  outline-offset: 3px;
+}
+.btn:focus-visible, .modal-opt-btn:focus-visible {
+  outline: 3px solid var(--dorado-claro);
+  outline-offset: 3px;
+}
+
 /* ─── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .site-header { padding: 20px 16px 18px; flex-wrap: wrap; }
@@ -890,29 +916,29 @@ body {
     <h1 class="header-title">Análisis FODA<br><em style="font-weight:300;font-size:0.75em">Café Andino: crecer sin perder el origen</em></h1>
     <p class="header-subtitle">Herramienta de diagnóstico estratégico · Actividad grupal</p>
   </div>
-  <span class="header-badge">⏱ 45–60 min</span>
+  <span class="header-badge" aria-label="Duración estimada: 45 a 60 minutos">⏱ 45–60 min</span>
 </header>
 
 <!-- ─── STEPPER ─────────────────────────────────────────────────── -->
-<nav class="stepper" id="stepper">
-  <button class="step-btn active" onclick="irFase(0)" id="tab0">
-    <span class="step-num">1</span> El caso
+<nav class="stepper" id="stepper" role="navigation" aria-label="Pasos de la actividad">
+  <button class="step-btn active" onclick="irFase(0)" id="tab0" aria-current="step">
+    <span class="step-num" aria-hidden="true">1</span> El caso
   </button>
-  <span class="step-divider">›</span>
+  <span class="step-divider" aria-hidden="true">›</span>
   <button class="step-btn" onclick="irFase(1)" id="tab1">
-    <span class="step-num">2</span> Clasificar factores
+    <span class="step-num" aria-hidden="true">2</span> Clasificar factores
   </button>
-  <span class="step-divider">›</span>
+  <span class="step-divider" aria-hidden="true">›</span>
   <button class="step-btn" onclick="irFase(2)" id="tab2">
-    <span class="step-num">3</span> Matriz FODA
+    <span class="step-num" aria-hidden="true">3</span> Matriz FODA
   </button>
-  <span class="step-divider">›</span>
+  <span class="step-divider" aria-hidden="true">›</span>
   <button class="step-btn" onclick="irFase(3)" id="tab3">
-    <span class="step-num">4</span> Estrategias
+    <span class="step-num" aria-hidden="true">4</span> Estrategias
   </button>
-  <span class="step-divider">›</span>
+  <span class="step-divider" aria-hidden="true">›</span>
   <button class="step-btn" onclick="irFase(4)" id="tab4">
-    <span class="step-num">5</span> Decisión
+    <span class="step-num" aria-hidden="true">5</span> Decisión
   </button>
 </nav>
 
@@ -930,7 +956,7 @@ body {
 
   <div class="caso-intro">
     <div class="caso-intro-header">
-      <span class="caso-icon">☕</span>
+      <span class="caso-icon" role="img" aria-label="Ícono de café">☕</span>
       <div>
         <h2>Café Andino — contexto estratégico</h2>
         <p>Lima · 8 años de operación · Decisión crítica de expansión</p>
@@ -1007,7 +1033,10 @@ body {
       <span>🖱</span>
       <span>Arrastra cada tarjeta al cuadrante donde mejor encaja: Fortaleza, Debilidad, Oportunidad o Amenaza. En móvil, toca la flecha (›) de cada tarjeta para elegir.</span>
     </div>
-    <div class="banco-cards" id="banco" ondragover="onDragOver(event,'banco')" ondrop="onDrop(event,'banco')" ondragleave="onDragLeave(event,'banco')">
+    <div class="banco-cards" id="banco" 
+         role="list"
+         aria-label="Banco de factores sin clasificar"
+         ondragover="onDragOver(event,'banco')" ondrop="onDrop(event,'banco')" ondragleave="onDragLeave(event,'banco')">
       <!-- tarjetas generadas por JS -->
     </div>
   </div>
@@ -1017,14 +1046,16 @@ body {
     <!-- Fortaleza -->
     <div class="drop-zone">
       <div class="drop-header fortaleza">
-        <span class="drop-header-icon">💪</span>
+        <span class="drop-header-icon" role="img" aria-hidden="true">💪</span>
         <div class="drop-header-text">
           <h3>FORTALEZAS</h3>
           <p>Factores internos positivos</p>
         </div>
-        <span class="drop-count" id="cnt-fortaleza">0</span>
+        <span class="drop-count" id="cnt-fortaleza" aria-live="polite">0</span>
       </div>
       <div class="drop-area fortaleza-bg" id="zona-fortaleza"
+           role="list"
+           aria-label="Zona Fortalezas"
            ondragover="onDragOver(event,'fortaleza')"
            ondrop="onDrop(event,'fortaleza')"
            ondragleave="onDragLeave(event,'fortaleza')">
@@ -1033,14 +1064,16 @@ body {
     <!-- Debilidad -->
     <div class="drop-zone">
       <div class="drop-header debilidad">
-        <span class="drop-header-icon">⚠️</span>
+        <span class="drop-header-icon" role="img" aria-hidden="true">⚠️</span>
         <div class="drop-header-text">
           <h3>DEBILIDADES</h3>
           <p>Factores internos negativos</p>
         </div>
-        <span class="drop-count" id="cnt-debilidad">0</span>
+        <span class="drop-count" id="cnt-debilidad" aria-live="polite">0</span>
       </div>
       <div class="drop-area debilidad-bg" id="zona-debilidad"
+           role="list"
+           aria-label="Zona Debilidades"
            ondragover="onDragOver(event,'debilidad')"
            ondrop="onDrop(event,'debilidad')"
            ondragleave="onDragLeave(event,'debilidad')">
@@ -1049,14 +1082,16 @@ body {
     <!-- Oportunidad -->
     <div class="drop-zone">
       <div class="drop-header oportunidad">
-        <span class="drop-header-icon">🌱</span>
+        <span class="drop-header-icon" role="img" aria-hidden="true">🌱</span>
         <div class="drop-header-text">
           <h3>OPORTUNIDADES</h3>
           <p>Factores externos positivos</p>
         </div>
-        <span class="drop-count" id="cnt-oportunidad">0</span>
+        <span class="drop-count" id="cnt-oportunidad" aria-live="polite">0</span>
       </div>
       <div class="drop-area oportunidad-bg" id="zona-oportunidad"
+           role="list"
+           aria-label="Zona Oportunidades"
            ondragover="onDragOver(event,'oportunidad')"
            ondrop="onDrop(event,'oportunidad')"
            ondragleave="onDragLeave(event,'oportunidad')">
@@ -1065,14 +1100,16 @@ body {
     <!-- Amenaza -->
     <div class="drop-zone">
       <div class="drop-header amenaza">
-        <span class="drop-header-icon">🔴</span>
+        <span class="drop-header-icon" role="img" aria-hidden="true">🔴</span>
         <div class="drop-header-text">
           <h3>AMENAZAS</h3>
           <p>Factores externos negativos</p>
         </div>
-        <span class="drop-count" id="cnt-amenaza">0</span>
+        <span class="drop-count" id="cnt-amenaza" aria-live="polite">0</span>
       </div>
       <div class="drop-area amenaza-bg" id="zona-amenaza"
+           role="list"
+           aria-label="Zona Amenazas"
            ondragover="onDragOver(event,'amenaza')"
            ondrop="onDrop(event,'amenaza')"
            ondragleave="onDragLeave(event,'amenaza')">
@@ -1312,7 +1349,7 @@ body {
 </main><!-- /main -->
 
 <!-- ─── MODAL MÓVIL ─────────────────────────────────────────────── -->
-<div class="modal-overlay" id="modal" onclick="cerrarModal(event)">
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="cerrarModal(event)">
   <div class="modal-box">
     <h3 id="modal-title">Clasificar factor</h3>
     <p id="modal-texto"></p>
@@ -1327,7 +1364,7 @@ body {
 </div>
 
 <!-- ─── TOAST ─────────────────────────────────────────────────────── -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ─── SCRIPT ─────────────────────────────────────────────────────── -->
 <script>
@@ -1391,14 +1428,24 @@ function crearTarjeta(id, texto, categoria) {
   if (categoria) card.classList.add(`en-${categoria}`);
   card.id = `card-${id}`;
   card.draggable = true;
-  card.innerHTML = `${texto}<button class="card-menu-btn" title="Clasificar" onclick="abrirModal('${id}')">›</button>`;
+  card.setAttribute('role', 'listitem');
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('aria-grabbed', 'false');
+  card.setAttribute('aria-label', texto);
+  card.innerHTML = `${texto}<button class="card-menu-btn" title="Clasificar en cuadrante" aria-label="Clasificar: ${texto}" onclick="abrirModal('${id}')">›</button>`;
   card.addEventListener('dragstart', (e) => {
     estado.cardArrastrada = id;
+    card.setAttribute('aria-grabbed', 'true');
     setTimeout(() => card.classList.add('dragging'), 0);
   });
   card.addEventListener('dragend', () => {
     card.classList.remove('dragging');
+    card.setAttribute('aria-grabbed', 'false');
     estado.cardArrastrada = null;
+  });
+  // soporte teclado: Enter o Espacio abre modal
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirModal(id); }
   });
   return card;
 }
@@ -1459,13 +1506,29 @@ function abrirModal(id) {
   estado.cardModalActual = id;
   document.getElementById('modal-title').textContent = 'Clasificar factor';
   document.getElementById('modal-texto').textContent = f.texto;
-  document.getElementById('modal').classList.add('open');
+  const overlay = document.getElementById('modal');
+  overlay.classList.add('open');
+  // mover foco al primer botón de opción
+  setTimeout(() => {
+    const primerBoton = overlay.querySelector('.modal-opt-btn');
+    if (primerBoton) primerBoton.focus();
+  }, 50);
 }
 function cerrarModal(e) {
   if (e && e.target !== document.getElementById('modal')) return;
   document.getElementById('modal').classList.remove('open');
   estado.cardModalActual = null;
 }
+// cerrar modal con Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('modal');
+    if (modal.classList.contains('open')) {
+      modal.classList.remove('open');
+      estado.cardModalActual = null;
+    }
+  }
+});
 function clasificarDesdeModal(categoria) {
   if (!estado.cardModalActual) return;
   estado.clasificacion[estado.cardModalActual] = categoria;
@@ -1639,11 +1702,13 @@ function irFase(n) {
   // actualizar fases
   document.querySelectorAll('.fase').forEach((el, i) => {
     el.classList.toggle('active', i === n);
+    el.setAttribute('aria-hidden', i !== n ? 'true' : 'false');
   });
   // actualizar tabs
   document.querySelectorAll('.step-btn').forEach((btn, i) => {
     btn.classList.remove('active','done');
-    if (i === n) btn.classList.add('active');
+    btn.removeAttribute('aria-current');
+    if (i === n) { btn.classList.add('active'); btn.setAttribute('aria-current', 'step'); }
     else if (i < n) btn.classList.add('done');
   });
   estado.faseActual = n;
